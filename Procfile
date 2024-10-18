@@ -1,1 +1,1 @@
-web: python proxy_api.py
+web: python cors_proxy.py

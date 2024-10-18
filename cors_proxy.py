@@ -1,38 +1,51 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app)  # Allow CORS from any domain
 
-@app.route('/proxy', methods=['GET', 'POST', 'PUT', 'DELETE'])
+# Enable CORS for all domains
+CORS(app)
+
+@app.route('/proxy', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 def proxy():
-    # Get the target URL from the request arguments
-    target_url = request.args.get('url')
-    
-    if not target_url:
-        return jsonify({"error": "Target URL is required as 'url' query param"}), 400
+    # Get the URL from query params (e.g., ?url=https://api.example.com)
+    url = request.args.get('url')
 
-    # Extract method (GET, POST, etc.), headers, and body
-    method = request.method
+    if not url:
+        return jsonify({'error': 'URL is required'}), 400
+
+    # Copy headers from incoming request, excluding 'Host'
     headers = {key: value for key, value in request.headers if key != 'Host'}
-    body = request.get_data()  # Raw request body (for POST/PUT/PATCH)
 
-    try:
-        # Forward the request to the target URL
-        response = requests.request(
-            method=method,
-            url=target_url,
-            headers=headers,
-            data=body,
-            params=request.args  # Query params
-        )
+    # Determine the request method and forward accordingly
+    if request.method == 'GET':
+        resp = requests.get(url, headers=headers, params=request.args)  # Use params to forward query params
+    elif request.method == 'POST':
+        resp = requests.post(url, headers=headers, json=request.json, data=request.data)  # Forward JSON or form-data
+    elif request.method == 'PUT':
+        resp = requests.put(url, headers=headers, json=request.json, data=request.data)
+    elif request.method == 'DELETE':
+        resp = requests.delete(url, headers=headers)
+    elif request.method == 'OPTIONS':
+        # Handle preflight requests by returning appropriate CORS headers
+        response = jsonify({'status': 'OK'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        return response
+    else:
+        return jsonify({'error': 'Unsupported HTTP method'}), 405
 
-        # Relay the response back to the client
-        return (response.content, response.status_code, response.headers.items())
-
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+    # Forward response from target server to the client
+    response = Response(resp.content, resp.status_code, resp.headers.items())
+    
+    # Add CORS headers to the response
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    
+    return response
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

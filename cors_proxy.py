@@ -37,7 +37,7 @@ def proxy():
             response = jsonify({'status': 'OK'})
             response.headers['Access-Control-Allow-Origin'] = '*'
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key, Accept, Content-Type'
             return response
         else:
             return jsonify({'error': 'Unsupported HTTP method'}), 405
@@ -45,7 +45,7 @@ def proxy():
         response = Response(resp.content, resp.status_code, resp.headers.items())
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key, Accept, Content-Type'
 
         return response
 

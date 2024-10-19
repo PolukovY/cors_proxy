@@ -45,11 +45,6 @@ def proxy():
         # Forward response from target server to the client
         response = Response(resp.content, resp.status_code, resp.headers.items())
 
-        # Add CORS headers to the response
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Api-Key')
-
         return response
 
     except requests.exceptions.RequestException as e:

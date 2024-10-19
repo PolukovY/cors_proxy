@@ -5,7 +5,6 @@ import logging
 
 app = Flask(__name__)
 
-# Enable CORS for all domains
 CORS(app, resources={r"/proxy": {"origins": "*", "allow_headers": ["*"]}})
 
 # Configure logging
@@ -23,10 +22,8 @@ def proxy():
     logging.info(f"Request method: {request.method}")
     logging.info(f"Request body: {request.json if request.is_json else request.data}")
 
-    # Copy headers from incoming request, excluding 'Host'
     headers = {key: value for key, value in request.headers if key.lower() != 'host'}
 
-    # Determine the request method and forward accordingly
     try:
         if request.method == 'GET':
             resp = requests.get(url, headers=headers, params=request.args)
@@ -38,15 +35,17 @@ def proxy():
             resp = requests.delete(url, headers=headers)
         elif request.method == 'OPTIONS':
             response = jsonify({'status': 'OK'})
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key'
             return response
         else:
             return jsonify({'error': 'Unsupported HTTP method'}), 405
 
-        # Forward response from target server to the client
         response = Response(resp.content, resp.status_code, resp.headers.items())
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key'
 
         return response
 

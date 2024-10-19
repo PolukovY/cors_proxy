@@ -37,11 +37,7 @@ def proxy():
         elif request.method == 'DELETE':
             resp = requests.delete(url, headers=headers)
         elif request.method == 'OPTIONS':
-            # Handle preflight requests by returning appropriate CORS headers
             response = jsonify({'status': 'OK'})
-            response.headers.add('Access-Control-Allow-Origin', '*')
-            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            response.headers.add('Access-Control-Allow-Headers', '*')
             return response
         else:
             return jsonify({'error': 'Unsupported HTTP method'}), 405

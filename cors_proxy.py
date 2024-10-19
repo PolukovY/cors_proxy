@@ -44,6 +44,9 @@ def proxy():
 
         # Forward response from target server to the client
         response = Response(resp.content, resp.status_code, resp.headers.items())
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key')
 
         return response
 

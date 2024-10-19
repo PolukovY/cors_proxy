@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import requests
+import logging
 
 app = Flask(__name__)
 
 # Enable CORS for all domains
 CORS(app)
+logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/proxy', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 def proxy():
@@ -14,6 +16,11 @@ def proxy():
 
     if not url:
         return jsonify({'error': 'URL is required'}), 400
+
+    logging.info(f"Proxying request to {url}")
+    logging.debug(f"Request headers: {request.headers}")
+    logging.debug(f"Request method: {request.method}")
+    logging.debug(f"Request body: {request.json if request.is_json else request.data}")
 
     # Copy headers from incoming request, excluding 'Host'
     headers = {key: value for key, value in request.headers if key != 'Host'}
